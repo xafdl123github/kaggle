@@ -256,3 +256,20 @@ for i in columns:
 
 for i in column_null:
     matrix[i].fillna(0, inplace=True)
+
+
+"""建模"""
+
+trainData = matrix[matrix['date_block_num'] < 34]
+label_train = trainData['item_cnt_month']
+X_train = trainData.drop('item_cnt_month', axis=1)
+
+validData = matrix[matrix['date_block_num'] == 34]
+label_valid = validData['item_cnt_month']
+X_valid = validData.drop('item_cnt_month', axis=1)
+
+import lightgbm as lgb
+train_data = lgb.Dataset(data=X_train, label=label_train)
+valid_data = lgb.Dataset(data=X_valid, label=label_valid)
+params = {'objective': 'regression', 'metric': 'rmse', 'n_estimators': 10000, 'num_leaves': 200, 'learning_rate': 0.01, 'bagging_fraction': 0.9, 'feature_fraction': 0.3, 'bagging_seed': 0, 'early_stop_rounds': 50}
+lgb.train(params, train_data, valid_sets=[train_data, valid_data])
