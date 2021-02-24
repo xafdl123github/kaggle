@@ -271,5 +271,15 @@ X_valid = validData.drop('item_cnt_month', axis=1)
 import lightgbm as lgb
 train_data = lgb.Dataset(data=X_train, label=label_train)
 valid_data = lgb.Dataset(data=X_valid, label=label_valid)
-params = {'objective': 'regression', 'metric': 'rmse', 'n_estimators': 10000, 'num_leaves': 200, 'learning_rate': 0.01, 'bagging_fraction': 0.9, 'feature_fraction': 0.3, 'bagging_seed': 0, 'early_stop_rounds': 50}
-lgb.train(params, train_data, valid_sets=[train_data, valid_data])
+params = {'objective': 'regression', 'metric': 'rmse', 'n_estimators': 1000, 'num_leaves': 200, 'learning_rate': 0.01, 'bagging_fraction': 0.9, 'feature_fraction': 0.3, 'bagging_seed': 0, 'early_stop_rounds': 50}
+lgb_model = lgb.train(params, train_data, valid_sets=[train_data, valid_data])
+
+# test数据
+testData = matrix[matrix['date_block_num'] == 34]
+# label_test = testData['item_cnt_month']
+X_test = testData.drop('item_cnt_month', axis=1)
+
+# 预测&生成文件
+y_test = lgb_model.predict(X_test).clip(0, 20)
+submission = pd.DataFrame({ 'ID': range(0, 214200), 'item_cnt_month': y_test})
+submission.to_csv('./submit/sub2.csv', index=False)
