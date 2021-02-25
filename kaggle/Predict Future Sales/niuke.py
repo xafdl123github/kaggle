@@ -1,31 +1,42 @@
-import random
-import re
+while True:
+    try:
+        num = int(input('请输入个数：'))
+    except:
+        print('键值对的个数是整形!')
+        continue
 
-# num = random.randint(2, 5)
-num = 3
+    if not isinstance(num, int):
+        print('键值对的个数是整形！')
+        continue
+    if num <=0:
+        print('键值对的个数必须大于0！')
 
-lst = []
-for i in range(num):
-    row = input()
-    lst.append(row)
+    lst = []
+    for i in range(num):
 
-for i in lst:
-    find_empty = re.fullmatch('\s+', i)
-    if find_empty:  # 如果是空字符串，不处理
-        print(i)
-    else:  # 如果不是空字符串
-        if len(i) < 8:
-            eight = '{}{}'.format(i, '0' * (8 - len(i)))
-            print(eight)
-        elif len(i) == 8:
-            print(i)
-        else:  # 大于8位
-            substr_num = len(i) // 8  # 8的倍数
-            left_num = len(i) % 8  # 8的余数
-            # 循环倍数
-            for k in range(0, substr_num):
-                print(i[k * 8: (k + 1) * 8])
+        while True:
+            row = input('请输入键值对')
+            rowlst = row.split()
 
-            if left_num != 0:
-                eight = '{}{}'.format(i[substr_num*8], '0' * (8 - left_num + 1))
-                print(eight)
+            if len(rowlst) != 2:
+                print('只能包含一个空格')
+                continue
+
+            try:
+                k = int(rowlst[0])
+                v = int(rowlst[1])
+            except:
+                print('k,v是整形!')
+                continue
+
+            if not isinstance(k, int) or k < 0:
+                print('key值必须是大于等于0的整数')
+                continue
+
+            if not isinstance(v, int) or v <= 0:
+                print('value值必须是大于0的整数')
+                continue
+
+            # lst.append((k, v))
+
+# ic(lst)
