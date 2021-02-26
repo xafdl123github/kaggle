@@ -16,7 +16,7 @@ test = pd.read_csv('./data/test.csv')   # (214200, 3)
 
 # 计算每个商品每个月的销售量，假如某个商品在某个月没有数据，则填充0（即这个月的销售量为0）
 sales_by_item_id = sales_train.pivot_table(index=['item_id'], values=['item_cnt_day'], columns='date_block_num', aggfunc=np.sum, fill_value=0).reset_index()
-sales_by_item_id.columns = sales_by_item_id.columns.droplevel().map(str)   # 去掉第一层索引
+sales_by_item_id.columns = sales_by_item_id.columns.droplevel().map(str)
 sales_by_item_id.columns.values[0] = 'item_id'
 sales_by_item_id = sales_by_item_id.rename_axis(None, axis=1)
 
@@ -267,17 +267,7 @@ X_valid = validData.drop('item_cnt_month', axis=1)
 import lightgbm as lgb
 train_data = lgb.Dataset(data=X_train, label=label_train)
 valid_data = lgb.Dataset(data=X_valid, label=label_valid)
-params = {
-    'objective': 'regression',  # 回归
-    'metric': 'rmse',   # 回归问题选择rmse
-    'n_estimators': 1000,
-    'num_leaves': 200,   # 每个弱学习器拥有的叶子的数量
-    'learning_rate': 0.01,
-    'bagging_fraction': 0.9,    # 每次训练“弱学习器”用的数据比例（应该也是随机的），用于加快训练速度和减小过拟合
-    'feature_fraction': 0.3,   # 每次迭代过程中，随机选择30%的特征建树（弱学习器）
-    'bagging_seed': 0,
-    'early_stop_rounds': 50
-}
+params = {'objective': 'regression', 'metric': 'rmse', 'n_estimators': 1000, 'num_leaves': 200, 'learning_rate': 0.01, 'bagging_fraction': 0.9, 'feature_fraction': 0.3, 'bagging_seed': 0, 'early_stop_rounds': 50}
 lgb_model = lgb.train(params, train_data, valid_sets=[train_data, valid_data])
 
 # test数据
