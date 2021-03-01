@@ -1,64 +1,59 @@
 from icecream import ic
-import re
-import sys
 
-while 1:
+
+# 判断偶数
+def judge_oushu(digit):
+    if digit % 2 == 0:
+        return True
+    else:
+        return False
+
+# 判断奇数
+def judge_qishu(digit):
+    if digit % 2 != 0:
+        return True
+    else:
+        return False
+
+# 判断素数
+def judge_prime(digit):
+    if digit % 2 == 0:  # 偶数
+        return False
+    else:   # 奇数
+        for i in range(2, digit//2):
+            if digit % i == 0:
+                return False
+        return True
+
+while True:
     try:
-        N = int(input())  # 同学数量
+        row1 = input()
+        num = int(row1) # 数据个数
 
-        sec_row = input()
-        stu_lst = sec_row.split()  # 同学列表
+        row2 = input()
+        num_lst = row2.split()
+        num_lst = list(map(int, num_lst))   # 转为整形
 
-        if N != len(stu_lst):
-            continue
+        # 偶数和奇数的个数不一定相等
+        oushu_lst = filter(judge_oushu, num_lst)   # 偶数列表   行
+        qishu_lst = filter(judge_qishu, num_lst)    # 奇数列表   列
 
-        res_lst = []
-        for idx in range(1, N-1):   # 循环每一个元素
-            # left
-            left_con = []
-            for left_idx in range(idx):
+        lines = []
+        for r in range(oushu_lst):   # 行
+            row_primes = []
+            for c in qishu_lst:    # 列
+                if judge_prime(r + c):
+                    row_primes.append(c)
 
-                if len(left_con) == 0:
-                    if stu_lst[left_idx] < stu_lst[idx]:
-                        left_con.append(stu_lst[left_idx])
-                else:
-                    if stu_lst[left_idx] <= left_con[-1]:
-                        left_con = []
-                        left_con.append(stu_lst[left_idx])
-                    else:  # 当前元素比容器（递增序列）最后一个元素大
-                        if stu_lst[left_idx] < stu_lst[idx]:
-                            left_con.append(stu_lst[left_idx])
-                        else:
-                            left_con = []
+            lines.append(len(row_primes))
 
-            ic(idx, left_con)
+        # 在列表中找到最小数的索引
+        r_index = lines.index(min(lines))   # 如果存在相同的数，则取第一次出现的索引
 
-            # right
-            right_con = []
-            right_seq = stu_lst[idx + 1:]
-            right_seq = right_seq[::-1]   # 当前元素的右边序列（不包含当前元素）
-            # ic(right_seq)
-            for right_idx in range(len(right_seq)):
-                if len(right_con) == 0:
-                    if right_seq[right_idx] < stu_lst[idx]:
-                        # ic(idx, right_seq[right_idx])
-                        right_con.append(right_seq[right_idx])
-                else:
-                    if right_seq[right_idx] <= right_con[-1]:
-                        right_con = []
-                        right_con.append(right_seq[right_idx])
-                    else:  # 当前元素比容器（递增序列）最后一个元素大
-                        if right_seq[right_idx] < stu_lst[idx]:
-                            right_con.append(right_seq[right_idx])
-                        else:
-                            right_con = []
 
-            ic(idx, right_con)
 
-            if len(left_con) > 0 and len(right_con) > 0:
-                res_lst.append(len(left_con) + len(right_con) + 1)
 
-        print(N - max(res_lst))
+
 
     except:
         break

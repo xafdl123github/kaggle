@@ -477,6 +477,7 @@ all_data['TotalSF'] = all_data['TotalBsmtSF'] + all_data['1stFlrSF'] + all_data[
 all_data['TotalPorch'] = all_data['OpenPorchSF'] + all_data['EnclosedPorch'] + all_data['3SsnPorch'] + all_data['ScreenPorch']
 all_data['OverallAssess'] = all_data['OverallQual'] + all_data['OverallCond']
 
+
 ################################################### 特征工程完毕
 
 

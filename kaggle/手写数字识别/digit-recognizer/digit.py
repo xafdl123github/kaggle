@@ -191,7 +191,7 @@ color_dict = {'train': Fore.WHITE, 'valid': Fore.GREEN}
 
 loss_dict = {'train': [], 'valid': []}
 
-# 开始训练
+# 开始训练  +++++++++++++++++++++
 for epoch in range(1, EPOCH + 1):
 
     train_loader = DataLoader(ds, batch_size=64, num_workers=0, shuffle=True)
