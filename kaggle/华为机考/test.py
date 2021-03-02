@@ -10,5 +10,6 @@ while True:
     try:
         n = int(input())
         print(fun(n))
+
     except:
         break
