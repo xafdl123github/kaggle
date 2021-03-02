@@ -1,15 +1,21 @@
-def fun(n):
-    if n <= 2:
-        return 1
-    elif n == 3:
-        return 2
-    else:
-        return fun(n-1) + fun(n-2)
+from icecream import ic
+import re
+import sys
 
-while True:
+while 1:
     try:
-        n = int(input())
-        print(fun(n))
+        N = int(input())  # 同学数量
+
+        sec_row = input()
+        stu_lst = sec_row.split()  # 同学列表
+
+        if N != len(stu_lst):
+            continue
+
+        # 每个数（从左侧开始）在最大递增子序列中的位置，从1开始
+
+        
+        # 每个数（从右侧开始）在最大递增子序列中的位置，从1开始
 
     except:
         break
