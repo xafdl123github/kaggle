@@ -1,101 +1,31 @@
 from icecream import ic
+import re
+import sys
 
-# 判断偶数
-def judge_oushu(digit):
-    if digit % 2 == 0:
-        return True
-    else:
-        return False
+while 1:
+    try:
+        N = int(input())  # 同学数量
 
-# 判断奇数
-def judge_qishu(digit):
-    if digit % 2 != 0:
-        return True
-    else:
-        return False
+        sec_row = input()
+        stu_lst = sec_row.split()  # 同学列表
 
-# 判断素数
-def judge_prime(digit):
-    if digit % 2 == 0:  # 偶数
-        return False
-    else:   # 奇数
-        for i in range(2, digit//2):
-            if digit % i == 0:
-                return False
-        return True
+        if N != len(stu_lst):
+            continue
 
-
-def find_prime(even_lst, odd_lst):
-    lines = []
-    for r in range(len(even_lst)):  # 行
-        row_primes = []
-        for c in odd_lst:  # 列
-            if judge_prime(r + c):
-                row_primes.append(c)
-
-        lines.append(len(row_primes))
-
-    # ic(lines)
-
-    if not lines:
-        return 0
-
-    if max(lines) == 0:
-        return 0
-
-    lines = list(filter(lambda x:x!=0, lines))
-
-    # 在列表中找到最小数的索引
-    r_index = lines.index(min(lines))  # 如果存在相同的数，则取第一次出现的索引
-    min_row = even_lst[r_index]  # 最小偶数
-
-    del even_lst[r_index]
-
-    for key, c in enumerate(odd_lst):
-        if judge_prime(min_row + c):  # 如果是素数
-            del odd_lst[key]
-            return 1 + find_prime(even_lst, odd_lst)
-
-    return 0
+        # 每个数（从左侧开始）在最大递增子序列中的位置，从1开始
+        # 186 186 150 187 200 160 130 197 200  188  190 199 200
+        # 1    1   1       2   2   1   3   4
+        for i in range(len(stu_lst)):
+            cur_stu = stu_lst[i]   # 当前元素
+            ascend = [cur_stu]  # 递增容器
+            for j in range(len(stu_lst)):
+                if i != j:
+                    if stu_lst[j] > ascend[-1]:   # 如果右侧元素比当前元素大
+                        ascend.append(stu_lst[j])
 
 
-while True:
-    # try:
-    row1 = input()
-    num = int(row1) # 数据个数
+        
+        # 每个数（从右侧开始）在最大递增子序列中的位置，从1开始
 
-    row2 = input()
-    num_lst = row2.split()
-    num_lst = list(map(int, num_lst))   # 转为整形
-
-    # 偶数和奇数的个数不一定相等
-    evens = list(filter(judge_oushu, num_lst))   # 偶数列表   行
-    odds = list(filter(judge_qishu, num_lst))    # 奇数列表   列
-
-    prime_pair_num = find_prime(evens, odds)
-
-    # ic(evens, odds)
-
-    # if len(evens) == len(odds):
-    #     prime_pair_num = find_prime(evens, odds)
-    # elif len(evens) > len(odds):
-    #     prime_pair_num = find_prime(evens[:len(odds)], odds)
-    #     yushu = evens[len(odds):]
-    #     new_evens = yushu[:int(len(yushu)/2)]
-    #     new_odds = yushu[int(len(yushu)/2):]
-    #     prime_pair_num += find_prime(new_evens, new_odds)
-    # else:
-    #     prime_pair_num = find_prime(evens, odds[:len(evens)])
-    #     ic(prime_pair_num)
-    #     yushu = odds[len(evens):]
-    #     ic(len(yushu), len(yushu) / 2)
-    #     new_evens = yushu[:int(len(yushu) / 2)]
-    #     new_odds = yushu[int(len(yushu) / 2):]
-    #     prime_pair_num += find_prime(new_evens, new_odds)
-    #     ic(prime_pair_num)
-
-    print(prime_pair_num)
-
-
-    # except:
-    #     break
+    except:
+        break

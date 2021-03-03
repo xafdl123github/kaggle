@@ -1,21 +1,20 @@
 from icecream import ic
-import re
-import sys
 
-while 1:
-    try:
-        N = int(input())  # 同学数量
+m = 7  # 苹果数
+n = 3  # 盘子数
 
-        sec_row = input()
-        stu_lst = sec_row.split()  # 同学列表
+def putApple(m, n):
+    if m == 0 or n == 1:
+        return 1
 
-        if N != len(stu_lst):
-            continue
+    if m < n:   # 苹果数 < 盘子数
+        # 没有空盘子
+        return putApple(m, m)
 
-        # 每个数（从左侧开始）在最大递增子序列中的位置，从1开始
+    else:  # 苹果数7 >= 盘子数3
+        # ++++++++++++++++++++有空盘子
+        # putApple(m, n-1)：有一个盘子是空的
+        # putApple(m-n, n)：每一个盘子最小有一个苹果
+        return putApple(m, n-1) + putApple(m-n, n)
 
-        
-        # 每个数（从右侧开始）在最大递增子序列中的位置，从1开始
-
-    except:
-        break
+res = putApple(m, n)
