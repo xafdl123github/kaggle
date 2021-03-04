@@ -87,7 +87,6 @@ shops['shop_city'] = shops['split'].map(lambda x:x[0])
 shops['shop_city_code'] = le.fit_transform(shops['shop_city'])
 
 def st(name):
-    ic(name)
     if 'ТЦ' in name or 'ТРЦ' in name:
         shopt = 'ТЦ'
     elif 'ТК' in name:
@@ -213,15 +212,15 @@ matrix['date_item_avg_item_price'] = matrix['date_item_avg_item_price'].astype(n
 lags = [1,2,3,4,5,6,12]
 matrix = lag_features(matrix, lags, 'date_item_avg_item_price')
 for i in lags:
-    matrix['delta_price_lag_'+str(i)]=(matrix['date_item_avg_item_price_lag_' + str(i)] - matrix['item_avg_item_price']) / matrix['item_avg_item_price']
+    matrix['delta_price_lag_'+str(i)] = (matrix['date_item_avg_item_price_lag_' + str(i)] - matrix['item_avg_item_price']) / matrix['item_avg_item_price']
 
 def select_trend(row):
     for i in lags:
         if pd.notnull(row['delta_price_lag_'+str(i)]):  # 如果不是NaN
             return row['delta_price_lag_'+str(i)]
-    return 0
+    return 0   #  如果delta_price_lag_都为空，那么将趋势设为0，0代表没有趋势
 
-matrix['delta_price_lag']=matrix.apply(select_trend, axis=1)
+matrix['delta_price_lag'] = matrix.apply(select_trend, axis=1)
 matrix['delta_price_lag'] = matrix['delta_price_lag'].astype(np.float16)
 
 features_to_drop = ['item_avg_item_price','date_item_avg_item_price']
@@ -282,10 +281,14 @@ lgb_model = lgb.train(params, train_data, valid_sets=[train_data, valid_data])
 
 # test数据
 testData = matrix[matrix['date_block_num'] == 34]
-# label_test = testData['item_cnt_month']
 X_test = testData.drop('item_cnt_month', axis=1)
 
 # 预测&生成文件
 y_test = lgb_model.predict(X_test).clip(0, 20)
 submission = pd.DataFrame({ 'ID': range(0, 214200), 'item_cnt_month': y_test})
-submission.to_csv('./submit/sub2.csv', index=False)
+# submission.to_csv('./submit/sub4.csv', index=False)
+
+test0 = test[test.item_id.isin(six_zero_item_id)]
+ids = list(test0.ID.values)
+submission.loc[submission.ID.isin(ids), 'item_cnt_month'] = 0.0
+submission.to_csv('./submit/sub7.csv', index=False)
