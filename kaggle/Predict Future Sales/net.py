@@ -21,8 +21,8 @@ sales_by_item_id.columns.values[0] = 'item_id'
 sales_by_item_id = sales_by_item_id.rename_axis(None, axis=1)
 
 # 获取最近6个月销售量为0的数据
-# six_zero = sales_by_item_id[(sales_by_item_id['28'] == 0) & (sales_by_item_id['29'] == 0) & (sales_by_item_id['30'] == 0) & (sales_by_item_id['31'] == 0) & (sales_by_item_id['32'] == 0) & (sales_by_item_id['33'] == 0)]
-# six_zero_item_id = list(six_zero['item_id'].values)   # item_id列表
+six_zero = sales_by_item_id[(sales_by_item_id['28'] == 0) & (sales_by_item_id['29'] == 0) & (sales_by_item_id['30'] == 0) & (sales_by_item_id['31'] == 0) & (sales_by_item_id['32'] == 0) & (sales_by_item_id['33'] == 0)]
+six_zero_item_id = list(six_zero['item_id'].values)   # item_id列表
 # test.loc[test.item_id.isin(six_zero_item_id), 'item_cnt_month'] = 0  # 将test数据中（最近六个月销量为0）的数据月销量设为0，有7812个
 
 # 计算每个商店每个月的销量
@@ -194,6 +194,30 @@ matrix=pd.merge(left=matrix, right=group, on=['date_block_num', 'item_id', 'shop
 matrix = lag_features(matrix, [1,2,3,6,12], 'date_item_city_avg_item_cnt')
 matrix.drop('date_item_city_avg_item_cnt', axis=1, inplace=True)
 
+# # 月销量（商店-商品）
+# group = matrix.groupby(['date_block_num', 'shop_id', 'item_id']).agg({'item_cnt_month': ['mean']})
+# group.columns = [ 'date_shopitem_avg_item_cnt' ]
+# group.reset_index(inplace=True)
+# matrix = pd.merge(left=matrix, right=group, on=['date_block_num', 'shop_id', 'item_id'], how='left')
+# matrix = lag_features(matrix, [1,2,3,6,12], 'date_shopitem_avg_item_cnt')
+# matrix.drop('date_shopitem_avg_item_cnt', axis=1, inplace=True)
+
+# # 月销量（商店类型）
+# group = matrix.groupby(['date_block_num','shop_type_code']).agg({'item_cnt_month': 'mean'})
+# group.columns = ['date_shoptype_avg_item_cnt']
+# group = group.reset_index()
+# matrix = pd.merge(left=matrix, right=group, on=['date_block_num','shop_type_code'], how='left')
+# matrix = lag_features(matrix, [1,2,3,6,12], 'date_shoptype_avg_item_cnt')
+# matrix.drop('date_shoptype_avg_item_cnt', axis=1, inplace=True)
+#
+# # 月销量（商品-商店类型）
+# group = matrix.groupby(['date_block_num', 'item_id', 'shop_type_code']).agg({'item_cnt_month': ['mean']})
+# group.columns = ['date_item_shoptype_avg_item_cnt']
+# group = group.reset_index()
+# matrix=pd.merge(left=matrix, right=group, on=['date_block_num', 'item_id', 'shop_type_code'], how='left')
+# matrix = lag_features(matrix, [1,2,3,6,12], 'date_item_shoptype_avg_item_cnt')
+# matrix.drop('date_item_shoptype_avg_item_cnt', axis=1, inplace=True)
+
 # 趋势特征
 group = sales_train.groupby('item_id').agg({'item_price': 'mean'})
 group.columns = ['item_avg_item_price']
@@ -253,6 +277,21 @@ for i in column_null:
     matrix[i].fillna(0, inplace=True)
 
 
+# # 降低偏度，降低偏度后，效果稍微好一点
+# from scipy.special import boxcox1p, boxcox
+# columns = []
+# for col in matrix.columns:
+#     if col != 'item_cnt_month':
+#         if stats.skew(matrix[col]) > 0.75:
+#             columns.append(col)
+# # for i in columns:
+# #     print(i, '>> ', stats.skew(matrix[i]))
+# for i in columns:
+#     matrix[i]=boxcox1p(matrix[i], 0.15)
+# # for i in columns:
+# #     print(i, '>> ', stats.skew(matrix[i]))
+
+
 """建模"""
 
 trainData = matrix[matrix['date_block_num'] < 34]
@@ -286,7 +325,6 @@ X_test = testData.drop('item_cnt_month', axis=1)
 # 预测&生成文件
 y_test = lgb_model.predict(X_test).clip(0, 20)
 submission = pd.DataFrame({ 'ID': range(0, 214200), 'item_cnt_month': y_test})
-# submission.to_csv('./submit/sub4.csv', index=False)
 
 test0 = test[test.item_id.isin(six_zero_item_id)]
 ids = list(test0.ID.values)
