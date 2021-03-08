@@ -375,5 +375,5 @@ params = {
     'early_stop_rounds': 50
 }
 lgb_model = lgb.train(params, train_data, valid_sets=[train_data, valid_data])
-# [2000]	training's rmse: 0.741418	valid_1's rmse: 0.888629
-# [10000]	training's rmse: 0.680365	valid_1's rmse: 0.876645
+# [2000]	training's rmse: 0.741418	valid_1's rmse: 0.888629   kaggle: 0.93425  34个月(0.92392)
+# [10000]	training's rmse: 0.680365	valid_1's rmse: 0.876645    kaggle: 0.92547

@@ -318,6 +318,11 @@ params = {
 }
 lgb_model = lgb.train(params, train_data, valid_sets=[train_data, valid_data])
 
+# 验证
+# from sklearn.metrics import mean_squared_error
+# valid_prediction = lgb_model.predict(X_valid).clip(0,20)
+# rmse_valid = np.sqrt(mean_squared_error(valid_prediction, label_valid))
+
 # test数据
 testData = matrix[matrix['date_block_num'] == 34]
 X_test = testData.drop('item_cnt_month', axis=1)
