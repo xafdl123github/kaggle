@@ -298,7 +298,7 @@ features_to_drop = ['trend_item_avg_cnt_month','trend_date_item_avg_cnt_month']
 for i in lags:
     features_to_drop += ['trend_date_item_avg_cnt_month_lag_'+str(i)]
     features_to_drop += ['delta_cnt_month_lag_'+str(i)]
-matrix.drop(features_to_drop, axis=1, inplace=True)
+    matrix.drop(features_to_drop, axis=1, inplace=True)
 
 # 因为有12个月的延迟特征（1，2，3，6，12）（1，2，3，4，5，6，12），所以需要删除前12月的数据
 matrix = matrix[matrix['date_block_num'] > 11]
