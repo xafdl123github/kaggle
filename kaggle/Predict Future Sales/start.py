@@ -16,7 +16,7 @@ test = pd.read_csv('./data/test.csv')   # (214200, 3)
 
 # 计算每个商品每个月的销售量，假如某个商品在某个月没有数据，则填充0（即这个月的销售量为0）
 sales_by_item_id = sales_train.pivot_table(index=['item_id'], values=['item_cnt_day'], columns='date_block_num', aggfunc=np.sum, fill_value=0).reset_index()
-sales_by_item_id.columns = sales_by_item_id.columns.droplevel().map(str)   # 去掉第一层索引
+sales_by_item_id.columns = sales_by_item_id.columns.droplevel().map(str)
 sales_by_item_id.columns.values[0] = 'item_id'
 sales_by_item_id = sales_by_item_id.rename_axis(None, axis=1)
 
@@ -87,6 +87,7 @@ shops['shop_city'] = shops['split'].map(lambda x:x[0])
 shops['shop_city_code'] = le.fit_transform(shops['shop_city'])
 
 def st(name):
+    ic(name)
     if 'ТЦ' in name or 'ТРЦ' in name:
         shopt = 'ТЦ'
     elif 'ТК' in name:
@@ -121,6 +122,8 @@ def lag_features(df, lags, col):
         df = pd.merge(left=df, right=shifted, on=['date_block_num','shop_id','item_id'], how='left')
     return df
 
+matrix = lag_features(matrix, [1,2,3,6,12], 'item_cnt_month')
+
 # 月销量（所有商品）
 group = matrix.groupby('date_block_num').agg({'item_cnt_month': 'mean'}).reset_index()
 group.columns = ['date_block_num', 'date_avg_item_cnt']
@@ -143,8 +146,6 @@ group = group.reset_index()
 matrix = pd.merge(left=matrix, right=group, on=['date_block_num','shop_id'], how='left')
 matrix = lag_features(matrix, [1,2,3,6,12], 'date_shop_avg_item_cnt')
 matrix.drop('date_shop_avg_item_cnt', axis=1, inplace=True)
-
-
 
 # 月销量（每个类别）
 group = matrix.groupby(['date_block_num','item_category_id']).agg({'item_cnt_month': 'mean'})
@@ -194,8 +195,6 @@ matrix=pd.merge(left=matrix, right=group, on=['date_block_num', 'item_id', 'shop
 matrix = lag_features(matrix, [1,2,3,6,12], 'date_item_city_avg_item_cnt')
 matrix.drop('date_item_city_avg_item_cnt', axis=1, inplace=True)
 
-
-
 # 趋势特征
 group = sales_train.groupby('item_id').agg({'item_price': 'mean'})
 group.columns = ['item_avg_item_price']
@@ -214,15 +213,15 @@ matrix['date_item_avg_item_price'] = matrix['date_item_avg_item_price'].astype(n
 lags = [1,2,3,4,5,6,12]
 matrix = lag_features(matrix, lags, 'date_item_avg_item_price')
 for i in lags:
-    matrix['delta_price_lag_'+str(i)] = (matrix['date_item_avg_item_price_lag_' + str(i)] - matrix['item_avg_item_price']) / matrix['item_avg_item_price']
+    matrix['delta_price_lag_'+str(i)]=(matrix['date_item_avg_item_price_lag_' + str(i)] - matrix['item_avg_item_price']) / matrix['item_avg_item_price']
 
 def select_trend(row):
     for i in lags:
         if pd.notnull(row['delta_price_lag_'+str(i)]):  # 如果不是NaN
             return row['delta_price_lag_'+str(i)]
-    return 0   #  如果delta_price_lag_都为空，那么将趋势设为0，0代表没有趋势
+    return 0
 
-matrix['delta_price_lag'] = matrix.apply(select_trend, axis=1)
+matrix['delta_price_lag']=matrix.apply(select_trend, axis=1)
 matrix['delta_price_lag'] = matrix['delta_price_lag'].astype(np.float16)
 
 features_to_drop = ['item_avg_item_price','date_item_avg_item_price']
@@ -242,6 +241,9 @@ matrix['item_shop_first_sale'] = matrix['date_block_num'] - matrix.groupby(['ite
 matrix['item_first_sale'] = matrix['date_block_num'] - matrix.groupby('item_id')['date_block_num'].transform('min')
 
 
+#-----------------------------------------------------------------------------------------------------------------
+
+
 # 月销量（商店类型）
 group = matrix.groupby(['date_block_num','shop_type_code']).agg({'item_cnt_month': 'mean'})
 group.columns = ['date_shoptype_avg_item_cnt']
@@ -258,14 +260,51 @@ matrix=pd.merge(left=matrix, right=group, on=['date_block_num', 'item_id', 'shop
 matrix = lag_features(matrix, [1,2,3,6,12], 'date_item_shoptype_avg_item_cnt')
 matrix.drop('date_item_shoptype_avg_item_cnt', axis=1, inplace=True)
 
-# 月销量（商店-商品）
-group = matrix.groupby(['date_block_num', 'shop_id', 'item_id']).agg({'item_cnt_month': ['mean']})
-group.columns = [ 'date_shopitem_avg_item_cnt' ]
-group.reset_index(inplace=True)
-matrix = pd.merge(left=matrix, right=group, on=['date_block_num', 'shop_id', 'item_id'], how='left')
-matrix = lag_features(matrix, [1,2,3,6,12], 'date_shopitem_avg_item_cnt')
-matrix.drop('date_shopitem_avg_item_cnt', axis=1, inplace=True)
+# # 月销量（商店-商品）
+# group = matrix.groupby(['date_block_num', 'shop_id', 'item_id']).agg({'item_cnt_month': ['mean']})
+# group.columns = [ 'date_shopitem_avg_item_cnt' ]
+# group.reset_index(inplace=True)
+# matrix = pd.merge(left=matrix, right=group, on=['date_block_num', 'shop_id', 'item_id'], how='left')
+# matrix = lag_features(matrix, [1,2,3,6,12], 'date_shopitem_avg_item_cnt')
+# matrix.drop('date_shopitem_avg_item_cnt', axis=1, inplace=True)
 
+
+#-------------------------------------------------------------------------------------------
+
+
+# **********趋势特征 delta_cnt_month_lag ********************
+group = matrix.groupby('item_id').agg({'item_cnt_month': 'mean'})
+group.columns = ['trend_item_avg_cnt_month']
+group = group.reset_index()
+matrix = pd.merge(left=matrix, right=group, on='item_id', how='left')
+
+group = matrix.groupby(['date_block_num','item_id']).agg({'item_cnt_month': 'mean'})
+group.columns = ['trend_date_item_avg_cnt_month']
+group = group.reset_index()
+matrix=pd.merge(left=matrix, right=group, on=['date_block_num','item_id'], how='left')
+
+# 计算matrix中商品的历史价格
+lags = [1,2,3,4,5,6,12]
+matrix = lag_features(matrix, lags, 'trend_date_item_avg_cnt_month')
+for i in lags:
+    matrix['delta_cnt_month_lag_'+str(i)] = (matrix['trend_date_item_avg_cnt_month_lag_' + str(i)] - matrix['trend_item_avg_cnt_month']) / matrix['trend_item_avg_cnt_month']
+
+def select_trend2(row):
+    for i in lags:
+        if pd.notnull(row['delta_cnt_month_lag_'+str(i)]):  # 如果不是NaN
+            return row['delta_cnt_month_lag_'+str(i)]
+    return 0   #  如果delta_price_lag_都为空，那么将趋势设为0，0代表没有趋势
+
+matrix['delta_cnt_month_lag'] = matrix.apply(select_trend2, axis=1)
+matrix['delta_cnt_month_lag'] = matrix['delta_cnt_month_lag'].astype(np.float16)
+
+features_to_drop = ['trend_item_avg_cnt_month','trend_date_item_avg_cnt_month']
+for i in lags:
+    features_to_drop += ['trend_date_item_avg_cnt_month_lag_'+str(i)]
+    features_to_drop += ['delta_cnt_month_lag_'+str(i)]
+matrix.drop(features_to_drop, axis=1, inplace=True)
+
+#-----------------------------------------------------------------------------------------------------
 
 # **********趋势特征 delta2_cnt_month_lag ********************
 group = matrix.groupby(['shop_id', 'item_id']).agg({'item_cnt_month': 'mean'})
@@ -299,38 +338,6 @@ for i in lags:
 matrix.drop(features_to_drop, axis=1, inplace=True)
 
 
-# **********趋势特征 delta_cnt_month_lag ********************
-group = matrix.groupby('item_id').agg({'item_cnt_month': 'mean'})
-group.columns = ['trend_item_avg_cnt_month']
-group = group.reset_index()
-matrix = pd.merge(left=matrix, right=group, on='item_id', how='left')
-
-group = matrix.groupby(['date_block_num','item_id']).agg({'item_cnt_month': 'mean'})
-group.columns = ['trend_date_item_avg_cnt_month']
-group = group.reset_index()
-matrix=pd.merge(left=matrix, right=group, on=['date_block_num','item_id'], how='left')
-
-# 计算matrix中商品的历史价格
-lags = [1,2,3,4,5,6,12]
-matrix = lag_features(matrix, lags, 'trend_date_item_avg_cnt_month')
-for i in lags:
-    matrix['delta_cnt_month_lag_'+str(i)] = (matrix['trend_date_item_avg_cnt_month_lag_' + str(i)] - matrix['trend_item_avg_cnt_month']) / matrix['trend_item_avg_cnt_month']
-
-def select_trend2(row):
-    for i in lags:
-        if pd.notnull(row['delta_cnt_month_lag_'+str(i)]):  # 如果不是NaN
-            return row['delta_cnt_month_lag_'+str(i)]
-    return 0   #  如果delta_price_lag_都为空，那么将趋势设为0，0代表没有趋势
-
-matrix['delta_cnt_month_lag'] = matrix.apply(select_trend2, axis=1)
-matrix['delta_cnt_month_lag'] = matrix['delta_cnt_month_lag'].astype(np.float16)
-
-features_to_drop = ['trend_item_avg_cnt_month','trend_date_item_avg_cnt_month']
-for i in lags:
-    features_to_drop += ['trend_date_item_avg_cnt_month_lag_'+str(i)]
-    features_to_drop += ['delta_cnt_month_lag_'+str(i)]
-    matrix.drop(features_to_drop, axis=1, inplace=True)
-
 
 # 因为有12个月的延迟特征（1，2，3，6，12）（1，2，3，4，5，6，12），所以需要删除前12月的数据
 matrix = matrix[matrix['date_block_num'] > 11]
@@ -363,25 +370,12 @@ params = {
     'metric': 'rmse',   # 回归问题选择rmse
     'n_estimators': 1000,
     'max_depth': 7,
-    'num_leaves': 180,   # 每个弱学习器拥有的叶子的数量
+    'num_leaves': 200,   # 每个弱学习器拥有的叶子的数量
     'learning_rate': 0.005,
-    'bagging_fraction': 0.7,    # 每次训练“弱学习器”用的数据比例（应该也是随机的），用于加快训练速度和减小过拟合
+    'bagging_fraction': 0.9,    # 每次训练“弱学习器”用的数据比例（应该也是随机的），用于加快训练速度和减小过拟合
     'feature_fraction': 0.3,   # 每次迭代过程中，随机选择30%的特征建树（弱学习器）
     'bagging_seed': 0,
     'early_stop_rounds': 50
 }
-# [1000]	training's rmse: 0.792979	valid_1's rmse: 0.898987
 lgb_model = lgb.train(params, train_data, valid_sets=[train_data, valid_data])
-
-
-# test数据
-testData = matrix[matrix['date_block_num'] == 34]
-X_test = testData.drop('item_cnt_month', axis=1)
-# 预测&生成文件
-y_test = lgb_model.predict(X_test).clip(0, 20)
-submission = pd.DataFrame({ 'ID': range(0, 214200), 'item_cnt_month': y_test})
-
-test0 = test[test.item_id.isin(six_zero_item_id)]
-ids = list(test0.ID.values)
-submission.loc[submission.ID.isin(ids), 'item_cnt_month'] = 0.0
-submission.to_csv('./submit/sub7.csv', index=False)
+# [1000]	training's rmse: 0.792969	valid_1's rmse: 0.898649   kaggle得分：0.93015
