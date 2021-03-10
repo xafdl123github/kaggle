@@ -6,6 +6,7 @@ from sklearn.preprocessing import LabelEncoder
 import time
 from itertools import product
 from icecream import ic
+import lightgbm as lgb
 
 
 plt.rcParams['font.sans-serif'] = ['SimHei']
@@ -340,17 +341,17 @@ matrix.drop(features_to_drop, axis=1, inplace=True)
 
 
 # 因为有12个月的延迟特征（1，2，3，6，12）（1，2，3，4，5，6，12），所以需要删除前12月的数据
-matrix = matrix[matrix['date_block_num'] > 11]
+matrix = matrix[matrix.date_block_num > 11]
 
 # 找到有NaN值的列，然后把那些列中的NaN值填充0
-columns = matrix.columns
-column_null = []
-for i in columns:
-    if len(matrix[matrix[i].isnull()]) > 0:
-        column_null.append(i)
+def fill_na(df):
+    for col in df.columns:
+        if ('_lag_' in col) & (df[col].isnull().any()):
+            if ('item_cnt' in col):
+                df[col].fillna(0, inplace=True)
+    return df
 
-for i in column_null:
-    matrix[i].fillna(0, inplace=True)
+matrix = fill_na(matrix)
 
 
 """建模"""
@@ -362,7 +363,7 @@ validData = matrix[matrix['date_block_num'] == 33]
 label_valid = validData['item_cnt_month']
 X_valid = validData.drop('item_cnt_month', axis=1)
 
-import lightgbm as lgb
+
 train_data = lgb.Dataset(data=X_train, label=label_train)
 valid_data = lgb.Dataset(data=X_valid, label=label_valid)
 params = {
