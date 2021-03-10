@@ -30,3 +30,9 @@ X_valid_transform = pca.transform(X_valid)
 def myfun(val):
     return round(val, 0)
 sub['item_cnt_month'] = sub['item_cnt_month'].apply(myfun)
+
+
+# 验证
+from sklearn.metrics import mean_squared_error
+valid_prediction = lgb_model.predict(X_valid).clip(0,20)
+rmse_valid = np.sqrt(mean_squared_error(valid_prediction, label_valid))

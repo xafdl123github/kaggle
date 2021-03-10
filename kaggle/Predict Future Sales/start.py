@@ -171,13 +171,13 @@ matrix = pd.merge(left=matrix, right=group, on=['date_block_num','cat_type_code'
 matrix = lag_features(matrix, [1,2,3,6,12], 'date_type_avg_item_cnt')
 matrix.drop('date_type_avg_item_cnt', axis=1, inplace=True)
 
-# 月销量（商品-商品大类） ++++++++++++ 和 月销量（商品）是重复的，因为每一个商品，类别是确定的，大类也是确定的
-group = matrix.groupby(['date_block_num', 'item_id', 'cat_type_code']).agg({'item_cnt_month': ['mean']})
-group.columns = ['date_item_type_avg_item_cnt']
-group = group.reset_index()
-matrix = pd.merge(left=matrix, right=group, on=['date_block_num', 'item_id', 'cat_type_code'], how='left')
-matrix = lag_features(matrix, [1,2,3,6,12], 'date_item_type_avg_item_cnt')
-matrix.drop('date_item_type_avg_item_cnt', axis=1, inplace=True)
+# # 月销量（商品-商品大类） ++++++++++++ 和 月销量（商品）是重复的，因为每一个商品，类别是确定的，大类也是确定的
+# group = matrix.groupby(['date_block_num', 'item_id', 'cat_type_code']).agg({'item_cnt_month': ['mean']})
+# group.columns = ['date_item_type_avg_item_cnt']
+# group = group.reset_index()
+# matrix = pd.merge(left=matrix, right=group, on=['date_block_num', 'item_id', 'cat_type_code'], how='left')
+# matrix = lag_features(matrix, [1,2,3,6,12], 'date_item_type_avg_item_cnt')
+# matrix.drop('date_item_type_avg_item_cnt', axis=1, inplace=True)
 
 # 月销量（商店城市）
 group = matrix.groupby(['date_block_num','shop_city_code']).agg({'item_cnt_month': 'mean'})
