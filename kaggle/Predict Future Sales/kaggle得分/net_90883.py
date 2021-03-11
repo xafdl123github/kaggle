@@ -6,6 +6,8 @@ from sklearn.preprocessing import LabelEncoder
 import time
 from itertools import product
 from icecream import ic
+import lightgbm as lgb
+
 
 
 plt.rcParams['font.sans-serif'] = ['SimHei']
