@@ -122,38 +122,28 @@ class CNN(nn.Module):
             nn.Conv2d(1, 32, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
             nn.BatchNorm2d(32),
+
             nn.Conv2d(32, 32, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
             nn.BatchNorm2d(32),
+
             nn.MaxPool2d(2, stride=2),
-            # nn.Dropout(0.25),
 
             nn.Conv2d(32, 64, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
             nn.BatchNorm2d(64),
+
             nn.Conv2d(64, 64, kernel_size=5, stride=1, padding=2),
             nn.ReLU(),
             nn.BatchNorm2d(64),
-            nn.MaxPool2d(2, stride=2),
-            # nn.Dropout(0.25),
 
-            # nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
-            # nn.ReLU(),
-            # nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
-            # nn.ReLU(),
-            # nn.BatchNorm2d(128),
-            # nn.MaxPool2d(2, stride=2),
-            # nn.Dropout(0.25),
+            nn.MaxPool2d(2, stride=2),
 
         )
 
         self.fc_unit = nn.Sequential(
             nn.Linear(64 * 7 * 7, 256),
-            # nn.BatchNorm1d(512),
             nn.ReLU(),
-            # nn.Linear(512, 256),
-            # nn.ReLU(),
-            # nn.BatchNorm1d(256),
             nn.Dropout(0.5),
             nn.Linear(256, 10)
         )
